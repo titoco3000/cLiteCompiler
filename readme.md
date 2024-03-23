@@ -28,3 +28,4 @@ Para compilar & executar
 
 ## Questões
 - Existe um limite pro tamanho de identificadores?
+- Devemos separar definição e implementação?
