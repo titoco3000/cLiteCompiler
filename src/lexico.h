@@ -7,14 +7,22 @@
 
 #define LEX_BUFFER_SIZE 100
 
-static void consomeChar(char *charPtr, FILE* entrada, int *contadorDeLinhas)
+// faz charPtr apontar para o proximo, e modifica o contador de linhas se necessario
+static void consomeChar(char *charPtr, FILE *entrada, int *contadorDeLinhas)
 {
     if (*charPtr == '\n')
         (*contadorDeLinhas)++;
     *charPtr = getc(entrada);
 }
 
-int hexStrToInt(char *str)
+// verifica se é um digito de um numero hexadecimal
+static int isHexDigit(char c)
+{
+    return isdigit(c) || c == 'A' || c == 'B' || c == 'C' || c == 'D' || c == 'E' || c == 'F';
+}
+
+// Converte numero hex em uma string para inteiro
+static int hexStrToInt(char *str)
 {
     int len = strlen(str);
     int num = 0;
@@ -37,24 +45,19 @@ int hexStrToInt(char *str)
         else if (str[i] == 'F')
             digito = 15;
 
-        int n = digito * multi;
-        num += n;
+        num += digito * multi;
         multi *= 16;
     }
     return num;
 }
 
-int ehCharDeFechamento(char c)
-{
-    // tudo que pode delimitar o fim de um identificador ou numero
-    return c == '(' || c == ')' || c == '{' || c == '}' || c == ',' || c == ';' || c == '=' || c == '|' || c == '&' || c == '<' || c == '>' || c == '!' || c == '+' || c == '-' || c == '*' || c == '/' || c == '\n' || c == '\t' || c == '\0' || c == ' '||c==EOF;
-}
 /*
  */
 Token *analiseLexica(FILE *entrada)
 {
     char lookahead = (char)getc(entrada);
     int linha = 1;
+
     char buffer[LEX_BUFFER_SIZE];
     int bufferOcup = 0;
 
@@ -217,18 +220,22 @@ Token *analiseLexica(FILE *entrada)
         // numero
         else if (lookahead == '0')
         {
+            // todo numero começa com 0x
             consomeChar(&lookahead, entrada, &linha);
             if (lookahead == 'x')
             {
                 consomeChar(&lookahead, entrada, &linha);
                 bufferOcup = 0;
-                while (isdigit(lookahead) || lookahead == 'A' || lookahead == 'B' || lookahead == 'C' || lookahead == 'D' || lookahead == 'E' || lookahead == 'F')
+                // enquanto encontrar digitos, vai adicionando no buffer
+                while (isHexDigit(lookahead))
                 {
                     buffer[bufferOcup++] = lookahead;
                     consomeChar(&lookahead, entrada, &linha);
                 }
-                if (ehCharDeFechamento(lookahead))
+                // se chegou num fim válido
+                if (!isalpha(lookahead))
                 {
+                    // adiciona fim da string
                     buffer[bufferOcup] = 0;
                     int numero = hexStrToInt(buffer);
                     InserirTokenNaLista(&tokenList, CriarTokenNumero(numero, linha));
@@ -245,20 +252,23 @@ Token *analiseLexica(FILE *entrada)
                 InserirTokenNaLista(&tokenList, CriarTokenErro("após prefixo '0', deve vir 'x'", linha));
             }
         }
+        // identificador
         else if (lookahead == '_')
         {
             consomeChar(&lookahead, entrada, &linha);
             bufferOcup = 0;
             buffer[bufferOcup++] = '_';
+            // primeiro char do identificador deve ser uma letra
             if (isalpha(lookahead))
             {
                 buffer[bufferOcup++] = lookahead;
                 consomeChar(&lookahead, entrada, &linha);
-                while (!ehCharDeFechamento(lookahead))
+                while (isalnum(lookahead))
                 {
                     buffer[bufferOcup++] = lookahead;
                     consomeChar(&lookahead, entrada, &linha);
                 }
+                // adiciona fim da string
                 buffer[bufferOcup] = 0;
                 InserirTokenNaLista(&tokenList, CriarTokenIdentifier(buffer, linha));
             }
@@ -268,16 +278,17 @@ Token *analiseLexica(FILE *entrada)
                 InserirTokenNaLista(&tokenList, CriarTokenErro("Identificador deve começar com underline + letra", linha));
             }
         }
-        // espaços em branco
+        // espaços em branco são ignorados
         else if (lookahead == '\n' || lookahead == ' ' || lookahead == '\t')
         {
             consomeChar(&lookahead, entrada, &linha);
         }
 
+        // palavras-chave
         else
         {
             bufferOcup = 0;
-            while (!ehCharDeFechamento(lookahead) && !erroLexico)
+            while (isalnum(lookahead) && !erroLexico)
             {
                 if (isalpha(lookahead))
                 {
@@ -292,29 +303,25 @@ Token *analiseLexica(FILE *entrada)
                     InserirTokenNaLista(&tokenList, CriarTokenErro(msg, linha));
                 }
             }
+            // adiciona fim da string
             buffer[bufferOcup] = 0;
-            if (strcmp(buffer, "int") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_TIPO_INT, linha));
-            else if (strcmp(buffer, "bool") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_TIPO_BOOL, linha));
-            else if (strcmp(buffer, "void") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_TIPO_VOID, linha));
-            else if (strcmp(buffer, "main") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_MAIN, linha));
-            else if (strcmp(buffer, "if") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_IF, linha));
-            else if (strcmp(buffer, "else") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_ELSE, linha));
-            else if (strcmp(buffer, "while") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_WHILE, linha));
-            else if (strcmp(buffer, "scanf") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_SCANF, linha));
-            else if (strcmp(buffer, "printf") == 0)
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_PRINTF, linha));
-            else
+
+            // compara lista de palavras-chave
+            char *palavrasChave[9] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf"};
+            TokenType tiposChave[9] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF};
+
+            int achou = 0;
+            for (int i = 0; (i < 9 && !achou); i++)
+            {
+                if (strcmp(buffer, palavrasChave[i]) == 0){
+                    InserirTokenNaLista(&tokenList, CriarToken(tiposChave[i], linha));
+                    achou = 1;
+                }
+            }
+            if(!achou)
             {
                 erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("Termo não reconhecido", linha));
+                InserirTokenNaLista(&tokenList, CriarTokenErro("Palavra-chave não reconhecida", linha));
             }
         }
     }

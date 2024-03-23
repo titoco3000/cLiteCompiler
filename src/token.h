@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
+//tipos possíveis de token
 typedef enum
 {
     // unica letra
@@ -47,28 +48,33 @@ typedef enum
     TOKEN_ERRO
 } TokenType;
 
+//struct para armazenar tipo de token e informações relacionadas
 typedef struct Token
 {
     TokenType tipo;
-    void *conteudo;
+    void *conteudo; //Token pode ou não ter conteudo. É um void* para apontar para um bloco no heap de qualquer tipo
     int linha;
-    struct Token *prox;
+    struct Token *prox; //aponta para o próximo para servir como uma lista
 } Token;
+
+//Construtores
 
 Token *CriarToken(TokenType tipo, int linha)
 {
+    //como é para ficar numa lista, sempre alocado do heap
     Token *t = (Token *)malloc(sizeof(Token));
     t->tipo = tipo;
-    t->conteudo = 0;
+    t->conteudo = NULL;
     t->linha = linha;
-    t->prox = 0;
+    t->prox = NULL;
     return t;
 }
 
+// Cria token guardando o identifier
 Token *CriarTokenIdentifier(char *str, int linha)
 {
+    //copia para garantir que é o dono do bloco de memória no heap
     char *copia = (char *)malloc(strlen(str) + 1);
-
     strcpy(copia, str);
 
     Token *t = CriarToken(TOKEN_IDENTIFICADOR, linha);
@@ -76,6 +82,7 @@ Token *CriarTokenIdentifier(char *str, int linha)
     return t;
 }
 
+// Cria token guardando uma mensagem de erro
 Token *CriarTokenErro(char *str, int linha)
 {
     char *copia = (char *)malloc(strlen(str) + 1);
@@ -87,6 +94,7 @@ Token *CriarTokenErro(char *str, int linha)
     return t;
 }
 
+// Cria token guardando o numero
 Token *CriarTokenNumero(int numero, int linha)
 {
     char *copia = (char *)malloc(sizeof(int));
@@ -100,12 +108,14 @@ Token *CriarTokenNumero(int numero, int linha)
 
 void InserirTokenNaLista(Token **lista, Token *novo)
 {
-    if (*lista == 0)
+    // se não tem primeiro item, adiciona na primeira posição
+    if (*lista == NULL)
         *lista = novo;
+    // se tem, avança até o final antes de inserir
     else
     {
         Token *t = *lista;
-        while (t->prox != 0)
+        while (t->prox != NULL)
             t = t->prox;
         t->prox = novo;
     }
@@ -224,6 +234,7 @@ void printTipoToken(Token *token)
         printf("NULL\n");
 }
 
+// Imprime todos os tokens e os conteudos
 void printTokenList(Token *lista)
 {
     while (lista)
@@ -246,13 +257,14 @@ void printTokenList(Token *lista)
 
 }
 
+//libera a lista recursivamente
 void liberarTokens(Token *token)
 {
     if (token)
     {
         if (token->conteudo)
             free(token->conteudo);
-        free(token->prox);
+        liberarTokens(token->prox);
         free(token);
     }
 }

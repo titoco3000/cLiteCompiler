@@ -24,4 +24,7 @@ Verifica se a ordem dos tokens está de acordo com a gramática.
 
 Para compilar & executar
 
-    gcc main.c -o build/clitec.exe && ./build/clitec.exe exemplos/ex1.clite
+    gcc src/main.c -o build/clitec.exe && ./build/clitec.exe exemplos/ex1.clite
+
+## Questões
+- Existe um limite pro tamanho de identificadores?
