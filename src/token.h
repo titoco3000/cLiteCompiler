@@ -101,7 +101,7 @@ Token *CriarTokenNumero(int numero, int linha)
 
     *copia = numero;
 
-    Token *t = CriarToken(TOKEN_TIPO_INT, linha);
+    Token *t = CriarToken(TOKEN_NUMERO, linha);
     t->conteudo = (void *)copia;
     return t;
 }
@@ -244,11 +244,11 @@ void printTokenList(Token *lista)
         switch (lista->tipo)
         {
         case TOKEN_NUMERO:
-            printf(" (%d)", *((int *)(lista->conteudo)));
+            printf("\t\t(%d)", *((int *)(lista->conteudo)));
             break;
         case TOKEN_IDENTIFICADOR:
         case TOKEN_ERRO:
-            printf(" (%s)", ((char *)(lista->conteudo)));
+            printf("\t(%s)", ((char *)(lista->conteudo)));
             break;
         }
         printf("\n");

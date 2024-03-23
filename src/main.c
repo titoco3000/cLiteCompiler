@@ -9,8 +9,12 @@ int main(int argc, char *argv[]){
     if (argc > 1)
         entrada = fopen(argv[1], "r");
     //se não, abre primeiro exemplo
-    else
+    else{
         entrada = fopen("exemplos/ex1.clite", "r");
+        //se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
+        if(!entrada)
+            entrada = fopen("../exemplos/ex1.clite", "r");
+    }
 
     //se conseguiu abrir
     if(entrada){

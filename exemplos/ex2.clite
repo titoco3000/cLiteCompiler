@@ -4,6 +4,7 @@ int main(
     int _num1, _num2;
     bool _booleano;
     scanf(_num1);
+    _num2 = 0x1A;
     scanf/*interrupção*/(_num2);
     _booleano = (_num1<=_num2);printf(_booleano)
     ;

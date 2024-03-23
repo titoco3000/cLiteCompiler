@@ -6,7 +6,7 @@ int main(void)
 {
     int _num1, _num2;
     int _maior;
-    scanf(_num1);
+    _num1 = 0xFF2;
     scanf(_num2);
     if (_num1 > _num2)
         _maior = _num1;
