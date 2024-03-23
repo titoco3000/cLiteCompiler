@@ -51,18 +51,18 @@ static int hexStrToInt(char *str)
     return num;
 }
 
-/*
- */
+// Retorna lista de tokens
 Token *analiseLexica(FILE *entrada)
 {
-    char lookahead = (char)getc(entrada);
+    char lookahead = getc(entrada);
     int linha = 1;
 
     char buffer[LEX_BUFFER_SIZE];
     int bufferOcup = 0;
 
-    Token *tokenList = 0;
+    Token *tokenList = NULL;
 
+    // bool
     int erroLexico = 0;
 
     while (lookahead != '\0' && lookahead != EOF && !erroLexico)
