@@ -1,0 +1,10 @@
+int main(
+    void)
+{
+    int _num1, _num2;
+    bool _booleano;
+    scanf(_num1);
+    scanf/*interrupção*/(_num2);
+    _booleano = (_num1<=_num2);printf(_booleano)
+    ;
+}
