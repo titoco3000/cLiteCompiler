@@ -74,12 +74,15 @@ Token *analiseLexica(FILE *entrada)
             // comentarios simples
             if (lookahead == '/')
             {
+                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
                 while (lookahead != '\n' || '\0')
                     consomeChar(&lookahead, entrada, &linha);
+                  
             }
             // comentarios multilinha
             else if (lookahead == '*')
             {
+                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
                 while (1)
                 {
                     consomeChar(&lookahead, entrada, &linha);
@@ -91,6 +94,9 @@ Token *analiseLexica(FILE *entrada)
                             consomeChar(&lookahead, entrada, &linha);
                             break;
                         }
+                    }
+                    if(lookahead == EOF){
+                        InserirTokenNaLista(&tokenList, CriarTokenErro("Comentario inacabado",linha));
                     }
                 }
             }

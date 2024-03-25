@@ -33,6 +33,7 @@ typedef enum
     // customisaveis
     TOKEN_IDENTIFICADOR,
     TOKEN_NUMERO,
+    TOKEN_COMENTARIO,
     // palavras-chave
     TOKEN_TIPO_INT,
     TOKEN_TIPO_BOOL,
@@ -216,6 +217,9 @@ void printTipoToken(Token *token)
             break;
         case TOKEN_NUMERO:
             printf("numero");
+            break;
+        case TOKEN_COMENTARIO:
+            printf("comentário");
             break;
         case TOKEN_EOF:
             printf("eof");
