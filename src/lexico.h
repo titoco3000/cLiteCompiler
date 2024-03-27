@@ -75,7 +75,7 @@ Token *analiseLexica(FILE *entrada)
             if (lookahead == '/')
             {
                 InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
-                while (lookahead != '\n' || '\0')
+                while (lookahead != '\n' || lookahead != EOF)
                     consomeChar(&lookahead, entrada, &linha);
                   
             }
