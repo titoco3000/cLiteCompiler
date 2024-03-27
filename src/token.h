@@ -38,6 +38,8 @@ typedef enum
     TOKEN_TIPO_INT,
     TOKEN_TIPO_BOOL,
     TOKEN_TIPO_VOID,
+    TOKEN_BOOL_TRUE,
+    TOKEN_BOOL_FALSE,
     TOKEN_MAIN,
     TOKEN_IF,
     TOKEN_ELSE,
@@ -190,6 +192,12 @@ void printTipoToken(Token *token)
             break;
         case TOKEN_TIPO_VOID:
             printf("void");
+            break;
+        case TOKEN_BOOL_TRUE:
+            printf("true");
+            break;
+        case TOKEN_BOOL_FALSE:
+            printf("false");
             break;
         case TOKEN_MAIN:
             printf("main");

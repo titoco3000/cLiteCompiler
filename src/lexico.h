@@ -313,8 +313,8 @@ Token *analiseLexica(FILE *entrada)
             buffer[bufferOcup] = 0;
 
             // compara lista de palavras-chave
-            char *palavrasChave[9] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf"};
-            TokenType tiposChave[9] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF};
+            char *palavrasChave[11] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf", "true", "false"};
+            TokenType tiposChave[9] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF, TOKEN_BOOL_TRUE, TOKEN_BOOL_FALSE};
 
             int achou = 0;
             for (int i = 0; (i < 9 && !achou); i++)
