@@ -312,23 +312,9 @@ static void operando()
     }
     else
     {
-        //expressao();
-        // Essa <expressao> causa um loop infinito. Para resolver isso, tenho
-        // duas opções:
-
-        // opção 1:
-        // eliminar ela e resultar em erro
-        
-        printf("#  %d Erro sintatico: token inesperado: ", lista->linha);
-        printTipoToken(lista);
-        printf("\n");
-        exit(1);
-
-        // opção 2:
-        // parenteses
-        // consomeToken(TOKEN_ABRE_PARENTESES);
-        // expressao();
-        // consomeToken(TOKEN_FECHA_PARENTESES);
+        consomeToken(TOKEN_ABRE_PARENTESES);
+        expressao();
+        consomeToken(TOKEN_FECHA_PARENTESES);
     }
 }
 
