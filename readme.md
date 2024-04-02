@@ -18,8 +18,6 @@ Recebe um arquivo e retorna uma lista de <code>tokens</code>.
 
 Verifica se a ordem dos tokens está de acordo com a gramática.
 
-### Resto (a ser feito)
-
 ## Uso:
 
 Para compilar & executar
