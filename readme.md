@@ -14,7 +14,7 @@ O compilador é dividido por etapas:
 
 Recebe um arquivo e retorna uma lista de <code>tokens</code>.
 
-### Análise Semântica (a ser feito)
+### Análise Sintática
 
 Verifica se a ordem dos tokens está de acordo com a gramática.
 

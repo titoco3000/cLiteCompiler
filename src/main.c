@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "lexico.h"
+#include "sintatico.h"
 
 int main(int argc, char *argv[]){
     FILE *entrada;
@@ -10,10 +11,10 @@ int main(int argc, char *argv[]){
         entrada = fopen(argv[1], "r");
     //se não, abre primeiro exemplo
     else{
-        entrada = fopen("exemplos/ex1.clite", "r");
+        entrada = fopen("exemplos/ex2.clite", "r");
         //se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
         if(!entrada)
-            entrada = fopen("../exemplos/ex1.clite", "r");
+            entrada = fopen("../exemplos/ex2.clite", "r");
     }
 
     //se conseguiu abrir
@@ -21,7 +22,8 @@ int main(int argc, char *argv[]){
         //cria lista de tokens
         Token* tokens = analiseLexica(entrada);
 
-        printTokenList(tokens);
+        //printTokenList(tokens);
+        analiseSintatica(tokens);
         
         //libera memória
         liberarTokens(tokens);

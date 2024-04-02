@@ -75,7 +75,7 @@ Token *analiseLexica(FILE *entrada)
             if (lookahead == '/')
             {
                 InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
-                while (lookahead != '\n' || lookahead != EOF)
+                while (lookahead != '\n' && lookahead != EOF)
                     consomeChar(&lookahead, entrada, &linha);
                   
             }
@@ -314,10 +314,10 @@ Token *analiseLexica(FILE *entrada)
 
             // compara lista de palavras-chave
             char *palavrasChave[11] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf", "true", "false"};
-            TokenType tiposChave[9] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF, TOKEN_BOOL_TRUE, TOKEN_BOOL_FALSE};
+            TokenType tiposChave[11] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF, TOKEN_BOOL_TRUE, TOKEN_BOOL_FALSE};
 
             int achou = 0;
-            for (int i = 0; (i < 9 && !achou); i++)
+            for (int i = 0; (i < 11 && !achou); i++)
             {
                 if (strcmp(buffer, palavrasChave[i]) == 0){
                     InserirTokenNaLista(&tokenList, CriarToken(tiposChave[i], linha));
