@@ -1,3 +1,12 @@
+/*
+Compiladores
+Trabalho 1: Analisador Léxico e Sintático
+
+Henrique Lee Amorim - R.A. 10389994 
+Tito Guidotti - R.A. 10388629
+
+Abril de 2024
+*/
 #include <stdio.h>
 
 #include "lexico.h"
