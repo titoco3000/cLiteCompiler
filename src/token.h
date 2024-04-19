@@ -100,7 +100,7 @@ Token *CriarTokenErro(char *str, int linha)
 // Cria token guardando o numero
 Token *CriarTokenNumero(int numero, int linha)
 {
-    char *copia = (char *)malloc(sizeof(int));
+    int *copia = (int *)malloc(sizeof(int));
 
     *copia = numero;
 

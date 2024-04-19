@@ -276,7 +276,12 @@ Token *analiseLexica(FILE *entrada)
                 }
                 // adiciona fim da string
                 buffer[bufferOcup] = 0;
-                InserirTokenNaLista(&tokenList, CriarTokenIdentifier(buffer, linha));
+                if(bufferOcup>16){
+                    erroLexico = 1;
+                    InserirTokenNaLista(&tokenList, CriarTokenErro("Identificador com mais de 15 caracteres", linha));
+                }
+                else
+                    InserirTokenNaLista(&tokenList, CriarTokenIdentifier(buffer, linha));
             }
             else
             {
@@ -285,7 +290,7 @@ Token *analiseLexica(FILE *entrada)
             }
         }
         // espaços em branco são ignorados
-        else if (lookahead == '\n' || lookahead == ' ' || lookahead == '\t')
+        else if (lookahead == '\n' || lookahead == '\r' || lookahead == ' ' || lookahead == '\t')
         {
             consomeChar(&lookahead, entrada, &linha);
         }

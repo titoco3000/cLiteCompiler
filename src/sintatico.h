@@ -12,6 +12,8 @@ static void consomeToken(TokenType token);
 static void programa(Token *tokens);
 static void declaracoes();
 static void comandos();
+static void comando();
+static void bloco_comandos();
 static void comando_atribuicao();
 static void comando_if();
 static void comando_while();
@@ -30,7 +32,8 @@ static void operando();
 Recebe uma lista de tokens e imprime cada um até encontrar um erro léxico ou sintático.
 Imprime resultado.
 */
-void analiseSintatica(Token *tokens){
+void analiseSintatica(Token *tokens)
+{
     programa(tokens);
 }
 
@@ -38,7 +41,7 @@ static void proximo() { lista = lista->prox; }
 
 static void consomeToken(TokenType esperado)
 {
-    if (lista->tipo == TOKEN_COMENTARIO && esperado!=TOKEN_COMENTARIO)
+    if (lista->tipo == TOKEN_COMENTARIO && esperado != TOKEN_COMENTARIO)
     {
         printf("#  %d:\t", lista->linha);
         printTipoToken(lista);
@@ -113,7 +116,7 @@ static void declaracoes()
 {
     while (lista->tipo == TOKEN_COMENTARIO)
         consomeToken(TOKEN_COMENTARIO);
-    
+
     if (lista->tipo == TOKEN_TIPO_INT)
     {
         consomeToken(TOKEN_TIPO_INT);
@@ -128,44 +131,55 @@ static void declaracoes()
         consomeToken(TOKEN_PONTO_E_VIRGULA);
         declaracoes();
     }
-    else
-    {
-        return;
-    }
 }
 
 static void comandos()
 {
     while (lista->tipo == TOKEN_COMENTARIO)
         consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_IDENTIFICADOR || lista->tipo == TOKEN_IF ||
-           lista->tipo == TOKEN_WHILE || lista->tipo == TOKEN_SCANF ||
-           lista->tipo == TOKEN_PRINTF || lista->tipo == TOKEN_PONTO_E_VIRGULA)
+    while (
+        lista->tipo == TOKEN_ABRE_CHAVES ||
+        lista->tipo == TOKEN_IDENTIFICADOR || lista->tipo == TOKEN_IF ||
+        lista->tipo == TOKEN_WHILE || lista->tipo == TOKEN_SCANF ||
+        lista->tipo == TOKEN_PRINTF || lista->tipo == TOKEN_PONTO_E_VIRGULA)
     {
-        switch (lista->tipo)
-        {
-        case TOKEN_IDENTIFICADOR:
-            comando_atribuicao();
-            break;
-        case TOKEN_IF:
-            comando_if();
-            break;
-        case TOKEN_WHILE:
-            comando_while();
-            break;
-        case TOKEN_SCANF:
-            comando_scanf();
-            break;
-        case TOKEN_PRINTF:
-            comando_printf();
-            break;
-        case TOKEN_PONTO_E_VIRGULA:
-            consomeToken(TOKEN_PONTO_E_VIRGULA);
-            break;
-        }
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        comando();
     }
+}
+
+static void comando()
+{
+    switch (lista->tipo)
+    {
+    case TOKEN_ABRE_CHAVES:
+        bloco_comandos();
+        break;
+    case TOKEN_IDENTIFICADOR:
+        comando_atribuicao();
+        break;
+    case TOKEN_IF:
+        comando_if();
+        break;
+    case TOKEN_WHILE:
+        comando_while();
+        break;
+    case TOKEN_SCANF:
+        comando_scanf();
+        break;
+    case TOKEN_PRINTF:
+        comando_printf();
+        break;
+    case TOKEN_PONTO_E_VIRGULA:
+        consomeToken(TOKEN_PONTO_E_VIRGULA);
+        break;
+    }
+    while (lista->tipo == TOKEN_COMENTARIO)
+        consomeToken(TOKEN_COMENTARIO);
+}
+static void bloco_comandos(){
+    consomeToken(TOKEN_ABRE_CHAVES);
+    comandos();
+    consomeToken(TOKEN_FECHA_CHAVES);
 }
 static void lista_variaveis()
 {
@@ -219,7 +233,7 @@ static void expressao_relacional()
 {
     expressao_adicao();
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     switch (lista->tipo)
     {
     case TOKEN_COMP_MENOR:
@@ -254,7 +268,7 @@ static void expressao_adicao()
 {
     expressao_multi();
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     while (lista->tipo == TOKEN_OP_SOMA)
     {
         consomeToken(TOKEN_OP_SOMA);
@@ -274,7 +288,7 @@ static void expressao_multi()
 {
     operando();
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     while (lista->tipo == TOKEN_OP_MULT)
     {
         consomeToken(TOKEN_OP_MULT);
@@ -293,7 +307,7 @@ static void expressao_multi()
 static void operando()
 {
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     if (lista->tipo == TOKEN_IDENTIFICADOR)
     {
         consomeToken(TOKEN_IDENTIFICADOR);
@@ -326,7 +340,7 @@ static void comando_if()
     consomeToken(TOKEN_FECHA_PARENTESES);
     comandos();
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     if (lista->tipo == TOKEN_ELSE)
     {
         consomeToken(TOKEN_ELSE);
@@ -357,7 +371,7 @@ static void comando_printf()
     consomeToken(TOKEN_ABRE_PARENTESES);
     expressao();
     while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consomeToken(TOKEN_COMENTARIO);
     while (lista->tipo == TOKEN_VIRGULA)
     {
         consomeToken(TOKEN_VIRGULA);

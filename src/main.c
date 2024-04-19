@@ -2,7 +2,7 @@
 Compiladores
 Trabalho 1: Analisador Léxico e Sintático
 
-Henrique Lee Amorim - R.A. 10389994 
+Henrique Lee Amorim - R.A. 10389994
 Tito Guidotti - R.A. 10388629
 
 Abril de 2024
@@ -12,32 +12,49 @@ Abril de 2024
 #include "lexico.h"
 #include "sintatico.h"
 
-int main(int argc, char *argv[]){
-    FILE *entrada;
+/*
+Retorna 1 se conseguiu abrir, 0 se não
+*/
+int analisarArquivo(char *nomeArquivo)
+{
+    FILE *arquivo = fopen(nomeArquivo, "r");
 
-    //se foi passado arquivo como arg, abre ele
-    if (argc > 1)
-        entrada = fopen(argv[1], "r");
-    //se não, abre primeiro exemplo
-    else{
-        entrada = fopen("exemplos/ex2.clite", "r");
-        //se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
-        if(!entrada)
-            entrada = fopen("../exemplos/ex2.clite", "r");
-    }
+    // se conseguiu abrir
+    if (arquivo)
+    {
+        // cria lista de tokens
+        Token *tokens = analiseLexica(arquivo);
 
-    //se conseguiu abrir
-    if(entrada){
-        //cria lista de tokens
-        Token* tokens = analiseLexica(entrada);
-
-        //printTokenList(tokens);
         analiseSintatica(tokens);
-        
-        //libera memória
+
+        // libera memória
         liberarTokens(tokens);
+        fclose(arquivo);
+
+        return 1;
     }
-    else{
-        printf("Falha ao abrir o arquivo\n");
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+
+    // se não foram passados arquivos como arg, abre exemplo
+    if (argc == 1)
+    {
+        if (!analisarArquivo("exemplos/ex1.clite"))
+        {
+            // se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
+            if (!analisarArquivo("../exemplos/ex1.clite"))
+                printf("Falha ao abrir o exemplo\n");
+        }
     }
+    else
+        for (int i = 1; i < argc; i++)
+        {
+            printf("Abrindo %s\n\n", argv[i]);
+            if (!analisarArquivo(argv[i]))
+                printf("Falha ao abrir o arquivo %s\n", argv[i]);
+            printf("\n");
+        }
 }
