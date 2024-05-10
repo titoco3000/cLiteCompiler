@@ -109,6 +109,17 @@ Token *CriarTokenNumero(int numero, int linha)
     return t;
 }
 
+Token* CopiarToken(Token* original){
+    if(original->tipo == TOKEN_IDENTIFICADOR)
+        return CriarTokenIdentifier((char*)original->conteudo, original->linha);
+    if(original->tipo == TOKEN_ERRO)
+        return CriarTokenErro((char*)original->conteudo, original->linha);
+    if(original->tipo == TOKEN_NUMERO)
+        return CriarTokenNumero(*((int*)original->conteudo), original->linha);
+    return CriarToken(original->tipo, original->linha);
+    
+}
+
 void InserirTokenNaLista(Token **lista, Token *novo)
 {
     // se não tem primeiro item, adiciona na primeira posição
