@@ -2,384 +2,338 @@
 #define SINTATICO_H
 
 #include "token.h"
+#include "lexico.h"
+
 #include <ctype.h>
 #include <string.h>
 
-Token *lista;
-
-static void proximo();
-static void consomeToken(TokenType token);
-static void programa(Token *tokens);
-static void declaracoes();
-static void comandos();
-static void comando();
-static void bloco_comandos();
-static void comando_atribuicao();
-static void comando_if();
-static void comando_while();
-static void comando_scanf();
-static void comando_printf();
-static void expressao();
-static void expressao_logica();
-static void expressao_relacional();
-static void expressao_adicao();
-static void expressao_multi();
-static void expressao();
-static void lista_variaveis();
-static void operando();
-
 /*
-Recebe uma lista de tokens e imprime cada um até encontrar um erro léxico ou sintático.
-Imprime resultado.
+Deve ser chamado antes de comparações
 */
-void analiseSintatica(Token *tokens)
-{
-    programa(tokens);
+static void obterProximoTokenQueNaoComentario(Lexico* lex){
+    while (lex->token.tipo == TOKEN_COMENTARIO){
+        printToken(&lex->token);
+        consumir_token(lex);
+    }
 }
 
-static void proximo() { lista = lista->prox; }
+void consome_token_com_tipo(Lexico *lex, TokenType tipo){
+    obterProximoTokenQueNaoComentario(lex);
+    if(lex->token.tipo != tipo){
+        printf("#  %d Erro sintatico: esperado ", lex->token.linha);
+        Token esperado = CriarToken(tipo, lex->token.linha);
 
-static void consomeToken(TokenType esperado)
-{
-    if (lista->tipo == TOKEN_COMENTARIO && esperado != TOKEN_COMENTARIO)
-    {
-        printf("#  %d:\t", lista->linha);
-        printTipoToken(lista);
+        printTipoToken(&esperado);
+        printf(" encontrado ");
+        printTipoToken(&lex->token);
         printf("\n");
-
-        proximo();
+        exit(1);
     }
-
-    if (lista->tipo == esperado)
-    {
-        if (lista->conteudo != NULL)
-        {
-            printf("#  %d:\t", lista->linha);
-            printTipoToken(lista);
-
-            if (lista->tipo == TOKEN_IDENTIFICADOR)
-                printf(" | %s\n", ((char *)(lista->conteudo)));
-            else if (lista->tipo == TOKEN_NUMERO)
-                printf("        | %d\n", *((int *)(lista->conteudo)));
-        }
-        else
-        {
-            printf("#  %d:\t", lista->linha);
-            printTipoToken(lista);
-            printf("\n");
-        }
-        proximo();
-    }
-    else
-    {
-        if (lista->tipo == TOKEN_ERRO)
-        {
-            printf("#  %d:\tErro Lexico   | %s\n", lista->linha, ((char *)(lista->conteudo)));
-            exit(1);
-        }
-        else
-        {
-
-            printf("#  %d Erro sintatico: esperado ", lista->linha);
-            Token *a = CriarToken(esperado, 2);
-
-            printTipoToken(a);
-            free(a);
-            printf(" encontrado ");
-            printTipoToken(lista);
-            printf("\n");
-            exit(1);
-        }
-    }
+    printToken(&lex->token);
+    consumir_token(lex);
 }
-static void eof()
-{
-    int linha = lista->linha;
-    consomeToken(TOKEN_EOF);
-    printf("..............\n%d linhas analisadas, programa sintaticamente correto\n", linha);
-}
-static void programa(Token *l)
-{
-    lista = l;
-    consomeToken(TOKEN_TIPO_INT);
-    consomeToken(TOKEN_MAIN);
-    consomeToken(TOKEN_ABRE_PARENTESES);
-    consomeToken(TOKEN_TIPO_VOID);
-    consomeToken(TOKEN_FECHA_PARENTESES);
-    consomeToken(TOKEN_ABRE_CHAVES);
-    declaracoes();
-    comandos();
-    consomeToken(TOKEN_FECHA_CHAVES);
-    eof();
-}
-static void declaracoes()
-{
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
 
-    if (lista->tipo == TOKEN_TIPO_INT)
+static void declaracoes(Lexico *lex);
+static void comandos(Lexico *lex);
+static void comando(Lexico *lex);
+static void bloco_comandos(Lexico *lex);
+static void comando_atribuicao(Lexico *lex);
+static void comando_if(Lexico *lex);
+static void comando_while(Lexico *lex);
+static void comando_scanf(Lexico *lex);
+static void comando_printf(Lexico *lex);
+static void expressao(Lexico *lex);
+static void expressao_logica(Lexico *lex);
+static void expressao_relacional(Lexico *lex);
+static void expressao_adicao(Lexico *lex);
+static void expressao_multi(Lexico *lex);
+static void expressao(Lexico *lex);
+static void lista_variaveis(Lexico *lex);
+static void operando(Lexico *lex);
+static void eof(Lexico *lex);
+
+
+void analiseSintatica(FILE* entrada){
+    Lexico lex = criar_lex(entrada);
+    consome_token_com_tipo(&lex, TOKEN_TIPO_INT);
+    consome_token_com_tipo(&lex, TOKEN_MAIN);
+    consome_token_com_tipo(&lex, TOKEN_ABRE_PARENTESES);
+    consome_token_com_tipo(&lex, TOKEN_TIPO_VOID);
+    consome_token_com_tipo(&lex, TOKEN_FECHA_PARENTESES);
+    consome_token_com_tipo(&lex, TOKEN_ABRE_CHAVES);
+    declaracoes(&lex);
+    comandos(&lex);
+    consome_token_com_tipo(&lex, TOKEN_FECHA_CHAVES);
+    eof(&lex);
+}
+
+static void declaracoes(Lexico *lex)
+{
+    obterProximoTokenQueNaoComentario(lex);
+    if (lex->token.tipo == TOKEN_TIPO_INT)
     {
-        consomeToken(TOKEN_TIPO_INT);
-        lista_variaveis();
-        consomeToken(TOKEN_PONTO_E_VIRGULA);
-        declaracoes();
+        consome_token_com_tipo(lex, TOKEN_TIPO_INT);
+        lista_variaveis(lex);
+        consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
+        declaracoes(lex);
     }
-    else if (lista->tipo == TOKEN_TIPO_BOOL)
+    else if (lex->token.tipo == TOKEN_TIPO_BOOL)
     {
-        consomeToken(TOKEN_TIPO_BOOL);
-        lista_variaveis();
-        consomeToken(TOKEN_PONTO_E_VIRGULA);
-        declaracoes();
+        consome_token_com_tipo(lex, TOKEN_TIPO_BOOL);
+        lista_variaveis(lex);
+        consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
+        declaracoes(lex);
     }
 }
 
-static void comandos()
+static void comandos(Lexico *lex)
 {
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
+    obterProximoTokenQueNaoComentario(lex);
     while (
-        lista->tipo == TOKEN_ABRE_CHAVES ||
-        lista->tipo == TOKEN_IDENTIFICADOR || lista->tipo == TOKEN_IF ||
-        lista->tipo == TOKEN_WHILE || lista->tipo == TOKEN_SCANF ||
-        lista->tipo == TOKEN_PRINTF || lista->tipo == TOKEN_PONTO_E_VIRGULA)
+        lex->token.tipo == TOKEN_ABRE_CHAVES ||
+        lex->token.tipo == TOKEN_IDENTIFICADOR || lex->token.tipo == TOKEN_IF ||
+        lex->token.tipo == TOKEN_WHILE || lex->token.tipo == TOKEN_SCANF ||
+        lex->token.tipo == TOKEN_PRINTF || lex->token.tipo == TOKEN_PONTO_E_VIRGULA)
     {
-        comando();
+        comando(lex);
+        obterProximoTokenQueNaoComentario(lex);
     }
 }
 
-static void comando()
+static void comando(Lexico* lex)
 {
-    switch (lista->tipo)
+    obterProximoTokenQueNaoComentario(lex);
+    switch (lex->token.tipo)
     {
     case TOKEN_ABRE_CHAVES:
-        bloco_comandos();
+        bloco_comandos(lex);
         break;
     case TOKEN_IDENTIFICADOR:
-        comando_atribuicao();
+        comando_atribuicao(lex);
         break;
     case TOKEN_IF:
-        comando_if();
+        comando_if(lex);
         break;
     case TOKEN_WHILE:
-        comando_while();
+        comando_while(lex);
         break;
     case TOKEN_SCANF:
-        comando_scanf();
+        comando_scanf(lex);
         break;
     case TOKEN_PRINTF:
-        comando_printf();
+        comando_printf(lex);
         break;
     case TOKEN_PONTO_E_VIRGULA:
-        consomeToken(TOKEN_PONTO_E_VIRGULA);
+        consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
         break;
     }
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
 }
-static void bloco_comandos(){
-    consomeToken(TOKEN_ABRE_CHAVES);
-    comandos();
-    consomeToken(TOKEN_FECHA_CHAVES);
+
+static void bloco_comandos(Lexico *lex){
+    consome_token_com_tipo(lex, TOKEN_ABRE_CHAVES);
+    comandos(lex);
+    consome_token_com_tipo(lex, TOKEN_FECHA_CHAVES);
 }
-static void lista_variaveis()
+
+static void lista_variaveis(Lexico *lex)
 {
-    consomeToken(TOKEN_IDENTIFICADOR);
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_VIRGULA)
+    consome_token_com_tipo(lex, TOKEN_IDENTIFICADOR);
+    obterProximoTokenQueNaoComentario(lex);
+    while (lex->token.tipo == TOKEN_VIRGULA)
     {
-        consomeToken(TOKEN_VIRGULA);
-        consomeToken(TOKEN_IDENTIFICADOR);
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_VIRGULA);
+        consome_token_com_tipo(lex, TOKEN_IDENTIFICADOR);
+        obterProximoTokenQueNaoComentario(lex);
     }
 }
 
-static void comando_atribuicao()
+static void comando_atribuicao(Lexico *lex)
 {
-    consomeToken(TOKEN_IDENTIFICADOR);
-    consomeToken(TOKEN_ATRIBUICAO);
-    expressao();
-    consomeToken(TOKEN_PONTO_E_VIRGULA);
+    consome_token_com_tipo(lex, TOKEN_IDENTIFICADOR);
+    consome_token_com_tipo(lex, TOKEN_ATRIBUICAO);
+    expressao(lex);
+    consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
 }
-static void expressao()
+
+static void expressao(Lexico *lex)
 {
-    expressao_logica();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_OR)
+    expressao_logica(lex);
+    while (lex->token.tipo == TOKEN_COMENTARIO)
+        consome_token_com_tipo(lex, TOKEN_COMENTARIO);
+    while (lex->token.tipo == TOKEN_OR)
     {
-        consomeToken(TOKEN_OR);
-        expressao_logica();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_OR);
+        expressao_logica(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
 }
 
-static void expressao_logica()
+// DAQUI PRA FRENTE FALTA
+
+static void expressao_logica(Lexico *lex)
 {
-    expressao_relacional();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_AND)
+    expressao_relacional(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    while (lex->token.tipo == TOKEN_AND)
     {
-        consomeToken(TOKEN_AND);
-        expressao_relacional();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_AND);
+        expressao_relacional(lex);
+        obterProximoTokenQueNaoComentario(lex);
     }
 }
-static void expressao_relacional()
+static void expressao_relacional(Lexico *lex)
 {
-    expressao_adicao();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    switch (lista->tipo)
+    expressao_adicao(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    switch (lex->token.tipo)
     {
     case TOKEN_COMP_MENOR:
-        consomeToken(TOKEN_COMP_MENOR);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_MENOR);
+        expressao_adicao(lex);
         break;
     case TOKEN_COMP_MENOR_OU_IGUAL:
-        consomeToken(TOKEN_COMP_MENOR_OU_IGUAL);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_MENOR_OU_IGUAL);
+        expressao_adicao(lex);
         break;
     case TOKEN_COMP_MAIOR:
-        consomeToken(TOKEN_COMP_MAIOR);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_MAIOR);
+        expressao_adicao(lex);
         break;
     case TOKEN_COMP_MAIOR_OU_IGUAL:
-        consomeToken(TOKEN_COMP_MAIOR_OU_IGUAL);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_MAIOR_OU_IGUAL);
+        expressao_adicao(lex);
         break;
     case TOKEN_COMP_IGUAL:
-        consomeToken(TOKEN_COMP_IGUAL);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_IGUAL);
+        expressao_adicao(lex);
         break;
     case TOKEN_COMP_DIFERENTE:
-        consomeToken(TOKEN_COMP_DIFERENTE);
-        expressao_adicao();
+        consome_token_com_tipo(lex, TOKEN_COMP_DIFERENTE);
+        expressao_adicao(lex);
         break;
     default:
         break;
     }
 }
-static void expressao_adicao()
+static void expressao_adicao(Lexico *lex)
 {
-    expressao_multi();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_OP_SOMA)
+    expressao_multi(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    while (lex->token.tipo == TOKEN_OP_SOMA)
     {
-        consomeToken(TOKEN_OP_SOMA);
-        expressao_multi();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_OP_SOMA);
+        expressao_multi(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
-    while (lista->tipo == TOKEN_OP_SUB)
+    while (lex->token.tipo == TOKEN_OP_SUB)
     {
-        consomeToken(TOKEN_OP_SUB);
-        expressao_multi();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_OP_SUB);
+        expressao_multi(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
 }
-static void expressao_multi()
+static void expressao_multi(Lexico *lex)
 {
-    operando();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_OP_MULT)
+    operando(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    while (lex->token.tipo == TOKEN_OP_MULT)
     {
-        consomeToken(TOKEN_OP_MULT);
-        operando();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_OP_MULT);
+        operando(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
-    while (lista->tipo == TOKEN_OP_DIV)
+    while (lex->token.tipo == TOKEN_OP_DIV)
     {
-        consomeToken(TOKEN_OP_DIV);
-        operando();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_OP_DIV);
+        operando(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
 }
-static void operando()
+static void operando(Lexico *lex)
 {
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    if (lista->tipo == TOKEN_IDENTIFICADOR)
+    obterProximoTokenQueNaoComentario(lex);
+    if (lex->token.tipo == TOKEN_IDENTIFICADOR)
     {
-        consomeToken(TOKEN_IDENTIFICADOR);
+        consome_token_com_tipo(lex, TOKEN_IDENTIFICADOR);
     }
-    else if (lista->tipo == TOKEN_NUMERO)
+    else if (lex->token.tipo == TOKEN_NUMERO)
     {
-        consomeToken(TOKEN_NUMERO);
+        consome_token_com_tipo(lex, TOKEN_NUMERO);
     }
-    else if (lista->tipo == TOKEN_BOOL_TRUE)
+    else if (lex->token.tipo == TOKEN_BOOL_TRUE)
     {
-        consomeToken(TOKEN_BOOL_TRUE);
+        consome_token_com_tipo(lex, TOKEN_BOOL_TRUE);
     }
-    else if (lista->tipo == TOKEN_BOOL_FALSE)
+    else if (lex->token.tipo == TOKEN_BOOL_FALSE)
     {
-        consomeToken(TOKEN_BOOL_FALSE);
+        consome_token_com_tipo(lex, TOKEN_BOOL_FALSE);
     }
     else
     {
-        consomeToken(TOKEN_ABRE_PARENTESES);
-        expressao();
-        consomeToken(TOKEN_FECHA_PARENTESES);
+        consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+        expressao(lex);
+        consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
     }
 }
 
-static void comando_if()
+static void comando_if(Lexico *lex)
 {
-    consomeToken(TOKEN_IF);
-    consomeToken(TOKEN_ABRE_PARENTESES);
-    expressao();
-    consomeToken(TOKEN_FECHA_PARENTESES);
-    comandos();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    if (lista->tipo == TOKEN_ELSE)
+    consome_token_com_tipo(lex, TOKEN_IF);
+    consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+    expressao(lex);
+    consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
+    comandos(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    if (lex->token.tipo == TOKEN_ELSE)
     {
-        consomeToken(TOKEN_ELSE);
-        comandos();
+        consome_token_com_tipo(lex, TOKEN_ELSE);
+        comandos(lex);
     }
 }
-static void comando_while()
+static void comando_while(Lexico *lex)
 {
-    consomeToken(TOKEN_WHILE);
-    consomeToken(TOKEN_ABRE_PARENTESES);
-    expressao();
-    consomeToken(TOKEN_FECHA_PARENTESES);
-    comandos();
+    consome_token_com_tipo(lex, TOKEN_WHILE);
+    consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+    expressao(lex);
+    consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
+    comandos(lex);
 }
 
-static void comando_scanf()
+static void comando_scanf(Lexico *lex)
 {
-    consomeToken(TOKEN_SCANF);
-    consomeToken(TOKEN_ABRE_PARENTESES);
-    lista_variaveis();
-    consomeToken(TOKEN_FECHA_PARENTESES);
-    consomeToken(TOKEN_PONTO_E_VIRGULA);
+    consome_token_com_tipo(lex, TOKEN_SCANF);
+    consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+    lista_variaveis(lex);
+    consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
+    consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
 }
 
-static void comando_printf()
+static void comando_printf(Lexico *lex)
 {
-    consomeToken(TOKEN_PRINTF);
-    consomeToken(TOKEN_ABRE_PARENTESES);
-    expressao();
-    while (lista->tipo == TOKEN_COMENTARIO)
-        consomeToken(TOKEN_COMENTARIO);
-    while (lista->tipo == TOKEN_VIRGULA)
+    consome_token_com_tipo(lex, TOKEN_PRINTF);
+    consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+    expressao(lex);
+    obterProximoTokenQueNaoComentario(lex);
+    while (lex->token.tipo == TOKEN_VIRGULA)
     {
-        consomeToken(TOKEN_VIRGULA);
-        expressao();
-        while (lista->tipo == TOKEN_COMENTARIO)
-            consomeToken(TOKEN_COMENTARIO);
+        consome_token_com_tipo(lex, TOKEN_VIRGULA);
+        expressao(lex);
+        while (lex->token.tipo == TOKEN_COMENTARIO)
+            consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
-    consomeToken(TOKEN_FECHA_PARENTESES);
-    consomeToken(TOKEN_PONTO_E_VIRGULA);
+    consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
+    consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
 }
+
+static void eof(Lexico *lex)
+{
+    consome_token_com_tipo(lex, TOKEN_EOF);
+    printf("..............\n%d linhas analisadas, programa sintaticamente correto\n", lex->linha);
+}
+
 #endif

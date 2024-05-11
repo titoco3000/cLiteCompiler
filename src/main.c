@@ -11,29 +11,48 @@ Abril de 2024
 
 #include "lexico.h"
 #include "sintatico.h"
+#include "file_helper.h"
+
+typedef enum
+{
+    ANALISE_LEXICA,
+    ANALISE_SINTATICA,
+    ANALISE_SEMANTICA
+} TipoDeAnalise;
+
+TipoDeAnalise tipoDeAnaliseAtual = ANALISE_SINTATICA;
 
 /*
 Retorna 1 se conseguiu abrir, 0 se não
 */
-int analisarArquivo(char *nomeArquivo)
+int analisarArquivo(char *nomeArquivo, TipoDeAnalise tipoDeAnalise)
 {
     FILE *arquivo = fopen(nomeArquivo, "r");
-
+    int linha = 1;
     // se conseguiu abrir
     if (arquivo)
     {
-        // cria lista de tokens
-        Token *tokens = analiseLexica(arquivo);
-
-        analiseSintatica(tokens);
-
-        // libera memória
-        liberarTokens(tokens);
-        fclose(arquivo);
+        if(tipoDeAnalise == ANALISE_LEXICA){
+            Lexico lex = criar_lex(arquivo);
+            while (lex.token.tipo != TOKEN_EOF && lex.token.tipo != TOKEN_ERRO ){
+                printToken(&lex.token);
+                consumir_token(&lex);
+            }
+        }
+        else if(tipoDeAnalise == ANALISE_SINTATICA){
+            analiseSintatica(arquivo);
+        }
 
         return 1;
     }
     return 0;
+}
+
+void atuarEmArquivo(char *addr){
+    printf("Abrindo %s\n\n", addr);
+    if (!analisarArquivo(addr, tipoDeAnaliseAtual))
+        printf("Falha ao abrir o arquivo %s\n", addr);
+    printf("\n");
 }
 
 int main(int argc, char *argv[])
@@ -42,19 +61,15 @@ int main(int argc, char *argv[])
     // se não foram passados arquivos como arg, abre exemplo
     if (argc == 1)
     {
-        if (!analisarArquivo("exemplos/ex1.clite"))
+        if (!analisarArquivo("exemplos/ex1.clite", tipoDeAnaliseAtual))
         {
             // se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
-            if (!analisarArquivo("../exemplos/ex1.clite"))
+            if (!analisarArquivo("../exemplos/ex1.clite", tipoDeAnaliseAtual))
                 printf("Falha ao abrir o exemplo\n");
-        }
+        } 
     }
-    else
-        for (int i = 1; i < argc; i++)
-        {
-            printf("Abrindo %s\n\n", argv[i]);
-            if (!analisarArquivo(argv[i]))
-                printf("Falha ao abrir o arquivo %s\n", argv[i]);
-            printf("\n");
-        }
+    else{
+        printf(is_directory(argv[1])?"is dir\n":"is file\n");
+        applyFunctionToAllFilesRecursive(argv[1],atuarEmArquivo);
+    }
 }

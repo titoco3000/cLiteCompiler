@@ -7,12 +7,20 @@
 
 #define LEX_BUFFER_SIZE 100
 
-// faz charPtr apontar para o proximo, e modifica o contador de linhas se necessario
-static void consomeChar(char *charPtr, FILE *entrada, int *contadorDeLinhas)
+typedef struct Lexico
 {
-    if (*charPtr == '\n')
-        (*contadorDeLinhas)++;
-    *charPtr = getc(entrada);
+    FILE *arquivo;
+    int linha;
+    char lookahead;
+    Token token;
+} Lexico;
+
+// faz charPtr apontar para o proximo, e modifica o contador de linhas se necessario
+static void consomeChar(Lexico* lex)
+{
+    if (lex->lookahead == '\n')
+        lex->linha++;
+    lex->lookahead = getc(lex->arquivo);
 }
 
 // verifica se é um digito de um numero hexadecimal
@@ -51,294 +59,267 @@ static int hexStrToInt(char *str)
     return num;
 }
 
-// Retorna lista de tokens
-Token *analiseLexica(FILE *entrada)
+Token obter_proximo_token(Lexico* lex)
 {
-    char lookahead = getc(entrada);
-    int linha = 1;
-
     char buffer[LEX_BUFFER_SIZE];
     int bufferOcup = 0;
 
-    Token *tokenList = NULL;
-
-    // bool
-    int erroLexico = 0;
-
-    while (lookahead != '\0' && lookahead != EOF && !erroLexico)
+    // pula espaços vazios
+    while (lex->lookahead == '\n' || lex->lookahead == '\r' || lex->lookahead == ' ' || lex->lookahead == '\t')
     {
-        // primeiro, lida com divisões e comentarios
-        if (lookahead == '/')
+        consomeChar(lex);
+    }
+    // primeiro, lida com divisões e comentarios
+    if (lex->lookahead == '/')
+    {
+        consomeChar(lex);
+        // comentarios simples
+        if (lex->lookahead == '/')
         {
-            consomeChar(&lookahead, entrada, &linha);
-            // comentarios simples
-            if (lookahead == '/')
+            while (lex->lookahead != '\n' && lex->lookahead != EOF)
+                consomeChar(lex);
+            return CriarToken(TOKEN_COMENTARIO, lex->linha);
+        }
+        // comentarios multilinha
+        else if (lex->lookahead == '*')
+        {
+            Token t = CriarToken(TOKEN_COMENTARIO, lex->linha);
+            while (1)
             {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
-                while (lookahead != '\n' && lookahead != EOF)
-                    consomeChar(&lookahead, entrada, &linha);
-                  
-            }
-            // comentarios multilinha
-            else if (lookahead == '*')
-            {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMENTARIO, linha));
-                while (1)
+                consomeChar(lex);
+                if (lex->lookahead == '*')
                 {
-                    consomeChar(&lookahead, entrada, &linha);
-                    if (lookahead == '*')
+                    consomeChar(lex);
+                    if (lex->lookahead == '/')
                     {
-                        consomeChar(&lookahead, entrada, &linha);
-                        if (lookahead == '/')
-                        {
-                            consomeChar(&lookahead, entrada, &linha);
-                            break;
-                        }
-                    }
-                    if(lookahead == EOF){
-                        InserirTokenNaLista(&tokenList, CriarTokenErro("Comentario inacabado",linha));
+                        consomeChar(lex);
+                        break;
                     }
                 }
-            }
-            // divisão
-            else
-            {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_OP_DIV, linha));
-            }
-        }
-        else if (lookahead == '(')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_ABRE_PARENTESES, linha));
-        }
-        else if (lookahead == ')')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_FECHA_PARENTESES, linha));
-        }
-        else if (lookahead == '{')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_ABRE_CHAVES, linha));
-        }
-        else if (lookahead == '}')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_FECHA_CHAVES, linha));
-        }
-        else if (lookahead == ',')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_VIRGULA, linha));
-        }
-        else if (lookahead == ';')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_PONTO_E_VIRGULA, linha));
-        }
-        // igualdade e atribuicao
-        else if (lookahead == '=')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == '=')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMP_IGUAL, linha));
-            }
-            else
-            {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_ATRIBUICAO, linha));
-            }
-        }
-        // or (||)
-        else if (lookahead == '|')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == '|')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_OR, linha));
-            }
-            else
-            {
-                erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("Falta do segundo '|'", linha));
-            }
-        }
-        // and (&&)
-        else if (lookahead == '&')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == '&')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_AND, linha));
-            }
-            else
-            {
-                erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("Falta do segundo '&'", linha));
-            }
-        }
-        // menor e menor_igual
-        else if (lookahead == '<')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == '=')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMP_MENOR_OU_IGUAL, linha));
-            }
-            else
-            {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMP_MENOR, linha));
-            }
-        }
-        // maior e maior_igual
-        else if (lookahead == '>')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == '=')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMP_MAIOR_OU_IGUAL, linha));
-            }
-            else
-            {
-                InserirTokenNaLista(&tokenList, CriarToken(TOKEN_COMP_MAIOR, linha));
-            }
-        }
-        else if (lookahead == '+')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_OP_SOMA, linha));
-        }
-        else if (lookahead == '-')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_OP_SUB, linha));
-        }
-        else if (lookahead == '*')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-            InserirTokenNaLista(&tokenList, CriarToken(TOKEN_OP_MULT, linha));
-        }
-        // numero
-        else if (lookahead == '0')
-        {
-            // todo numero começa com 0x
-            consomeChar(&lookahead, entrada, &linha);
-            if (lookahead == 'x')
-            {
-                consomeChar(&lookahead, entrada, &linha);
-                bufferOcup = 0;
-                // enquanto encontrar digitos, vai adicionando no buffer
-                while (isHexDigit(lookahead))
+                if (lex->lookahead == EOF)
                 {
-                    buffer[bufferOcup++] = lookahead;
-                    consomeChar(&lookahead, entrada, &linha);
-                }
-                // se chegou num fim válido
-                if (!isalpha(lookahead))
-                {
-                    // adiciona fim da string
-                    buffer[bufferOcup] = 0;
-                    int numero = hexStrToInt(buffer);
-                    InserirTokenNaLista(&tokenList, CriarTokenNumero(numero, linha));
-                }
-                else
-                {
-                    erroLexico = 1;
-                    InserirTokenNaLista(&tokenList, CriarTokenErro("numero emendado com caracteres não permitidos", linha));
+                    return CriarTokenErro("Comentario inacabado", lex->linha);
                 }
             }
-            else
-            {
-                erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("após prefixo '0', deve vir 'x'", linha));
-            }
+            return t;
         }
-        // identificador
-        else if (lookahead == '_')
+        // divisão
+        else
+            return CriarToken(TOKEN_OP_DIV, lex->linha);
+    }
+    // tokens demarcados por um unico char, sem duvidas
+    else if (lex->lookahead == '(')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_ABRE_PARENTESES, lex->linha);
+    }
+    else if (lex->lookahead == ')')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_FECHA_PARENTESES, lex->linha);
+    }
+    else if (lex->lookahead == '{')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_ABRE_CHAVES, lex->linha);
+    }
+    else if (lex->lookahead == '}')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_FECHA_CHAVES, lex->linha);
+    }
+    else if (lex->lookahead == ',')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_VIRGULA, lex->linha);
+    }
+    else if (lex->lookahead == ';')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_PONTO_E_VIRGULA, lex->linha);
+    }
+    // igualdade e atribuicao
+    else if (lex->lookahead == '=')
+    {
+        consomeChar(lex);
+        if (lex->lookahead == '=')
         {
-            consomeChar(&lookahead, entrada, &linha);
+            consomeChar(lex);
+            return CriarToken(TOKEN_COMP_IGUAL, lex->linha);
+        }
+        else
+            return CriarToken(TOKEN_ATRIBUICAO, lex->linha);
+    }
+    // or (||)
+    else if (lex->lookahead == '|')
+    {
+        consomeChar(lex);
+        if (lex->lookahead == '|')
+        {
+            consomeChar(lex);
+            return CriarToken(TOKEN_OR, lex->linha);
+        }
+        else
+            return CriarTokenErro("Falta do segundo '|'", lex->linha);
+    }
+    // and (&&)
+    else if (lex->lookahead == '&')
+    {
+        consomeChar(lex);
+        if (lex->lookahead == '&')
+        {
+            consomeChar(lex);
+            return CriarToken(TOKEN_AND, lex->linha);
+        }
+        else
+            return CriarTokenErro("Falta do segundo '&'", lex->linha);
+    }
+    // menor e menor_igual
+    else if (lex->lookahead == '<')
+    {
+        consomeChar(lex);
+        if (lex->lookahead == '=')
+        {
+            consomeChar(lex);
+            return CriarToken(TOKEN_COMP_MENOR_OU_IGUAL, lex->linha);
+        }
+        else
+            return CriarToken(TOKEN_COMP_MENOR, lex->linha);
+    }
+    // maior e maior_igual
+    else if (lex->lookahead == '>')
+    {
+        consomeChar(lex);
+        if (lex->lookahead == '=')
+        {
+            consomeChar(lex);
+            return CriarToken(TOKEN_COMP_MAIOR_OU_IGUAL, lex->linha);
+        }
+        else
+            return CriarToken(TOKEN_COMP_MAIOR, lex->linha);
+    }
+    else if (lex->lookahead == '+')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_OP_SOMA, lex->linha);
+    }
+    else if (lex->lookahead == '-')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_OP_SUB, lex->linha);
+    }
+    else if (lex->lookahead == '*')
+    {
+        consomeChar(lex);
+        return CriarToken(TOKEN_OP_MULT, lex->linha);
+    }
+    else if (lex->lookahead == EOF)
+        return CriarToken(TOKEN_EOF, lex->linha);
+    // numero
+    else if (lex->lookahead == '0')
+    {
+        // todo numero começa com 0x
+        consomeChar(lex);
+        if (lex->lookahead == 'x')
+        {
+            consomeChar(lex);
             bufferOcup = 0;
-            buffer[bufferOcup++] = '_';
-            // primeiro char do identificador deve ser uma letra
-            if (isalpha(lookahead))
+            // enquanto encontrar digitos, vai adicionando no buffer
+            while (isHexDigit(lex->lookahead))
             {
-                buffer[bufferOcup++] = lookahead;
-                consomeChar(&lookahead, entrada, &linha);
-                while (isalnum(lookahead))
-                {
-                    buffer[bufferOcup++] = lookahead;
-                    consomeChar(&lookahead, entrada, &linha);
-                }
+                buffer[bufferOcup++] = lex->lookahead;
+                consomeChar(lex);
+            }
+            // se chegou num fim válido
+            if (!isalpha(lex->lookahead))
+            {
                 // adiciona fim da string
                 buffer[bufferOcup] = 0;
-                if(bufferOcup>16){
-                    erroLexico = 1;
-                    InserirTokenNaLista(&tokenList, CriarTokenErro("Identificador com mais de 15 caracteres", linha));
-                }
-                else
-                    InserirTokenNaLista(&tokenList, CriarTokenIdentifier(buffer, linha));
+                int numero = hexStrToInt(buffer);
+                return CriarTokenNumero(numero, lex->linha);
             }
             else
-            {
-                erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("Identificador deve começar com underline + letra", linha));
-            }
+                return CriarTokenErro("numero invalido", lex->linha);
         }
-        // espaços em branco são ignorados
-        else if (lookahead == '\n' || lookahead == '\r' || lookahead == ' ' || lookahead == '\t')
-        {
-            consomeChar(&lookahead, entrada, &linha);
-        }
-
-        // palavras-chave
         else
+            return CriarTokenErro("após prefixo '0', deve vir 'x'", lex->linha);
+    }
+    // identificador
+    else if (lex->lookahead == '_')
+    {
+        consomeChar(lex);
+        bufferOcup = 0;
+        buffer[bufferOcup++] = '_';
+        // primeiro char do identificador deve ser uma letra
+        if (isalpha(lex->lookahead))
         {
-            bufferOcup = 0;
-            while (isalnum(lookahead) && !erroLexico)
+            buffer[bufferOcup++] = lex->lookahead;
+            consomeChar(lex);
+            while (isalnum(lex->lookahead) && bufferOcup <= 16)
             {
-                if (isalpha(lookahead))
-                {
-                    buffer[bufferOcup++] = lookahead;
-                    consomeChar(&lookahead, entrada, &linha);
-                }
-                else
-                {
-                    char msg[36] = "char invalido em palavra-chave(\' \')";
-                    msg[32] = lookahead;
-                    erroLexico = 1;
-                    InserirTokenNaLista(&tokenList, CriarTokenErro(msg, linha));
-                }
+                buffer[bufferOcup++] = lex->lookahead;
+                consomeChar(lex);
             }
             // adiciona fim da string
             buffer[bufferOcup] = 0;
-
-            // compara lista de palavras-chave
-            char *palavrasChave[11] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf", "true", "false"};
-            TokenType tiposChave[11] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF, TOKEN_BOOL_TRUE, TOKEN_BOOL_FALSE};
-
-            int achou = 0;
-            for (int i = 0; (i < 11 && !achou); i++)
+            if (bufferOcup > 16)
+                return CriarTokenErro("Identificador com mais de 15 caracteres", lex->linha);
+            else
+                return CriarTokenIdentifier(buffer, lex->linha);
+        }
+        else
+            return CriarTokenErro("Identificador deve começar com underline + letra", lex->linha);
+    }
+    // palavras-chave
+    else
+    {
+        bufferOcup = 0;
+        while (isalnum(lex->lookahead))
+        {
+            if (isalpha(lex->lookahead))
             {
-                if (strcmp(buffer, palavrasChave[i]) == 0){
-                    InserirTokenNaLista(&tokenList, CriarToken(tiposChave[i], linha));
-                    achou = 1;
-                }
+                buffer[bufferOcup++] = lex->lookahead;
+                consomeChar(lex);
             }
-            if(!achou)
+            else
             {
-                erroLexico = 1;
-                InserirTokenNaLista(&tokenList, CriarTokenErro("Palavra-chave não reconhecida", linha));
+                char msg[36] = "char invalido em palavra-chave(\' \')";
+                msg[32] = lex->lookahead;
+                return CriarTokenErro(msg, lex->linha);
             }
         }
-    }
-    if (!erroLexico)
-        InserirTokenNaLista(&tokenList, CriarToken(TOKEN_EOF, linha));
+        // adiciona fim da string
+        buffer[bufferOcup] = 0;
 
-    return tokenList;
+        // compara lista de palavras-chave
+        char *palavrasChave[11] = {"int", "bool", "void", "main", "if", "else", "while", "scanf", "printf", "true", "false"};
+        TokenType tiposChave[11] = {TOKEN_TIPO_INT, TOKEN_TIPO_BOOL, TOKEN_TIPO_VOID, TOKEN_MAIN, TOKEN_IF, TOKEN_ELSE, TOKEN_WHILE, TOKEN_SCANF, TOKEN_PRINTF, TOKEN_BOOL_TRUE, TOKEN_BOOL_FALSE};
+
+        int achou = 0;
+        for (int i = 0; (i < 11 && !achou); i++)
+        {
+            if (strcmp(buffer, palavrasChave[i]) == 0)
+            {
+                return CriarToken(tiposChave[i], lex->linha);
+                achou = 1;
+            }
+        }
+        if (!achou)
+            return CriarTokenErro("Palavra-chave não reconhecida", lex->linha);
+    }
 }
+
+Lexico criar_lex(FILE* arquivo){
+    Lexico lex;
+    lex.arquivo = arquivo;
+    lex.lookahead = getc(arquivo);
+    lex.linha = 1;
+    lex.token = obter_proximo_token(&lex);
+    return lex;
+}
+
+void consumir_token(Lexico *lex){
+    lex->token = obter_proximo_token(lex);
+}
+
 #endif
