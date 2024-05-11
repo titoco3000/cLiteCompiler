@@ -319,6 +319,7 @@ Lexico criar_lex(FILE* arquivo){
 }
 
 void consumir_token(Lexico *lex){
+    liberarToken(lex->token);
     lex->token = obter_proximo_token(lex);
 }
 

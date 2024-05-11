@@ -255,7 +255,7 @@ void printToken(Token *token){
     printf("\n");
 }
 
-void liberarTokens(Token token)
+void liberarToken(Token token)
 {
     if (token.conteudo)
         free(token.conteudo);
