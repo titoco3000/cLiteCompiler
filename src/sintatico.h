@@ -50,7 +50,7 @@ static void expressao_multi(Lexico *lex);
 static void expressao(Lexico *lex);
 static void lista_variaveis(Lexico *lex);
 static void operando(Lexico *lex);
-static void eof(Lexico *lex);
+static void fim_de_arquivo(Lexico *lex);
 
 
 void analiseSintatica(FILE* entrada){
@@ -64,7 +64,7 @@ void analiseSintatica(FILE* entrada){
     declaracoes(&lex);
     comandos(&lex);
     consome_token_com_tipo(&lex, TOKEN_FECHA_CHAVES);
-    eof(&lex);
+    fim_de_arquivo(&lex);
 }
 
 static void declaracoes(Lexico *lex)
@@ -330,7 +330,7 @@ static void comando_printf(Lexico *lex)
     consome_token_com_tipo(lex, TOKEN_PONTO_E_VIRGULA);
 }
 
-static void eof(Lexico *lex)
+static void fim_de_arquivo(Lexico *lex)
 {
     consome_token_com_tipo(lex, TOKEN_EOF);
     printf("..............\n%d linhas analisadas, programa sintaticamente correto\n", lex->linha);
