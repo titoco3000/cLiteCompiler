@@ -40,7 +40,7 @@ int analisarArquivo(char *nomeArquivo, TipoDeAnalise tipoDeAnalise)
             }
         }
         else if(tipoDeAnalise == ANALISE_SINTATICA){
-            analiseSintatica(arquivo);
+            programa(arquivo);
         }
 
         return 1;

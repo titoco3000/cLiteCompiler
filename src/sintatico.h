@@ -53,7 +53,7 @@ static void operando(Lexico *lex);
 static void fim_de_arquivo(Lexico *lex);
 
 
-void analiseSintatica(FILE* entrada){
+void programa(FILE* entrada){
     Lexico lex = criar_lex(entrada);
     consome_token_com_tipo(&lex, TOKEN_TIPO_INT);
     consome_token_com_tipo(&lex, TOKEN_MAIN);

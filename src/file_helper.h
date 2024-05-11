@@ -46,16 +46,8 @@ void applyFunctionToAllFilesRecursive(const char *path, void (*f)(char *))
             strcpy(buffer, path);
             strcat(buffer, FOLDER_SEPARATOR);
             strcat(buffer, dp->d_name);
-            if (
-#ifdef _WIN32
-                is_directory(buffer)
-#else
-                dp->d_type == 4
-#endif
-            )
-            {
+            if (is_directory(buffer))
                 applyFunctionToAllFilesRecursive(buffer, f);
-            }
             else
                 (*f)(buffer);
         }
