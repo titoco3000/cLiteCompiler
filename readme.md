@@ -24,6 +24,34 @@ Para compilar & executar
 
     gcc src/main.c -o build/clitec.exe && ./build/clitec.exe exemplos
 
-## Questões
-- Existe um limite pro tamanho de identificadores?
-- Devemos separar definição e implementação?
+
+## Tabela Mepa
+
+| Cód   | Descrição 
+| ----- | --------  
+| INPP  | Inicia programa      
+| AMEM  | Aloca memoria
+| ARMZ  | Armazena
+| SOMA  | Soma      
+| SUBT  | Subtração 
+| MULT  | Multiplicação
+| DIVI  | Divisão
+| INVR  | Inverte o numero em S
+| CONJ  | and
+| DISJ  | or
+| NEGA  | !
+| CMME  | <
+| CMMA  | >
+| CMIG  | ==
+| CMDG  | !=
+| CMEG  | <=
+| CMAG  | >=
+| CRCT  | Carrega constante na variavel
+| CRVL  | Carrega valor de S na variavel
+| LEIT  | Leitura
+| IMPR  | Imprime
+| PARA  | Encerra o programa
+| DSVS  | Desvia sempre
+| DSVF  | Desvia se falso
+| NADA  | Instrução vazia
+

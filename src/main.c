@@ -12,6 +12,7 @@ Abril de 2024
 #include "lexico.h"
 #include "sintatico.h"
 #include "file_helper.h"
+#include "semantico.h"
 
 typedef enum
 {
@@ -38,9 +39,17 @@ int analisarArquivo(char *nomeArquivo, TipoDeAnalise tipoDeAnalise)
                 printToken(&lex.token);
                 consumir_token(&lex);
             }
+            if(lex.token.tipo == TOKEN_ERRO){
+                printToken(&lex.token);
+            }
+            else{
+                printf("Analise lexica concluida com sucesso\n");
+            }
         }
         else if(tipoDeAnalise == ANALISE_SINTATICA){
-            programa(arquivo);
+            TabelaDeSimbolos tabelaDeSimbolos = CriarTabelaDeSimbolos();
+            programa(arquivo, &tabelaDeSimbolos);
+            LiberarTabelaDeSimbolos(tabelaDeSimbolos);
         }
 
         return 1;
@@ -61,15 +70,21 @@ int main(int argc, char *argv[])
     // se não foram passados arquivos como arg, abre exemplo
     if (argc == 1)
     {
-        if (!analisarArquivo("exemplos/ex1.clite", tipoDeAnaliseAtual))
+        if (!analisarArquivo("exemplos/ex2.clite", tipoDeAnaliseAtual))
         {
             // se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
-            if (!analisarArquivo("../exemplos/ex1.clite", tipoDeAnaliseAtual))
+            if (!analisarArquivo("../exemplos/ex2.clite", tipoDeAnaliseAtual))
                 printf("Falha ao abrir o exemplo\n");
         } 
     }
-    else{
-        printf(is_directory(argv[1])?"is dir\n":"is file\n");
-        applyFunctionToAllFilesRecursive(argv[1],atuarEmArquivo);
+    else
+    for (int i = 1; i < argc; i++)
+    {
+        if(is_directory(argv[i]))
+            applyFunctionToAllFilesRecursive(argv[i],atuarEmArquivo);
+        else
+            atuarEmArquivo(argv[i]);
     }
+    
+    
 }

@@ -5,13 +5,9 @@ inteiros e encontra o maior
 int main(void)
 {
     //oi
-    int _num1, _num2;
-    int _maior;
-    _num1 = 0xFF2;
-    scanf(_num2);
-    if (_num1 > _num2)
-        _maior = _num1;
-    else
-        _maior = _num2;
-    printf(_maior); // imprime o maior valor
+    int _num1;
+    _num1 = 0x2 + 0x3 * (0x4 - true);
+    printf(_num1, 0xFF,_num1); // imprime o maior valor
 }
+
+// 2 3 4 1 - * +

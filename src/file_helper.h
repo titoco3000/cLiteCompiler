@@ -16,6 +16,7 @@
 
 #include <dirent.h>
 #include <stdio.h>
+#include <pthread.h>
 
 int is_directory(char *addr)
 {
@@ -28,6 +29,18 @@ int is_directory(char *addr)
         return (status.st_mode & S_IFDIR) != 0;
     }
     return 0;
+}
+
+
+typedef struct thread_struct
+{
+    void (*func)(char *);
+    char *buffer;
+}thread_struct;
+
+void *thread_func(void *arg){
+    thread_struct *th = (thread_struct*)arg;
+    (*th->func)(th->buffer);
 }
 void applyFunctionToAllFilesRecursive(const char *path, void (*f)(char *))
 {
@@ -48,8 +61,14 @@ void applyFunctionToAllFilesRecursive(const char *path, void (*f)(char *))
             strcat(buffer, dp->d_name);
             if (is_directory(buffer))
                 applyFunctionToAllFilesRecursive(buffer, f);
-            else
-                (*f)(buffer);
+            else{
+                pthread_t thread;
+                thread_struct th;
+                th.func = f;
+                th.buffer = buffer;
+                pthread_create(&thread, NULL, thread_func, (void*)&th);
+                pthread_join(thread, NULL);
+            }
         }
     }
 
