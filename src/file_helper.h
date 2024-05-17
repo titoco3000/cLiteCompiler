@@ -18,6 +18,12 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#ifndef S_IFDIR
+    // Isso não é realmente necessario, e nunca vai ser executado;
+    // é só para parar erros irritantes no intellisense
+    #define S_IFDIR 16384
+#endif
+
 int is_directory(char *addr)
 {
     if (ACCESS_FUNC(addr, 0) == 0)
