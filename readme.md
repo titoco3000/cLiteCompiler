@@ -24,6 +24,8 @@ Para compilar & executar
 
     gcc src/main.c -o build/clitec.exe && ./build/clitec.exe exemplos
 
+Atenção: em Windows, a compilação de pastas funciona, mas não a de subpastas.
+
 
 ## Tabela Mepa
 
