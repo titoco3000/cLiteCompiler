@@ -1,3 +1,8 @@
+/*
+Ignore esse arquivo, era um teste só. 
+"Em desenvolvimento".
+*/
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>

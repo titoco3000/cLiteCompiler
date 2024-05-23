@@ -9,6 +9,10 @@
 #include <string.h>
 #include <pthread.h>
 
+/*
+encerra thread em vez de usar exit() para poder poder ser usado pelo
+file_helper.c
+*/
 #define EXIT_METHOD() printf("\n");pthread_exit(0);
 
 /*
@@ -23,6 +27,9 @@ static void obterProximoTokenQueNaoComentario(Lexico *lex)
     }
 }
 
+/*
+Consome com exigencia de tipo
+*/
 void consome_token_com_tipo(Lexico *lex, TokenType tipo)
 {
     obterProximoTokenQueNaoComentario(lex);
@@ -45,6 +52,9 @@ void consome_token_com_tipo(Lexico *lex, TokenType tipo)
     consumir_token(lex);
 }
 
+/*
+Se o identificador do próximo token já existe na tabela, causa erro
+*/
 static void verificar_redeclaracao(Lexico *lex, TabelaDeSimbolos *tabela)
 {
     obterProximoTokenQueNaoComentario(lex);
@@ -57,6 +67,9 @@ static void verificar_redeclaracao(Lexico *lex, TabelaDeSimbolos *tabela)
     simboloNaTabela = CriarSimbolo((char *)lex->token.conteudo, lex->token.linha);
     InserirNaTabelaDeSimbolos(tabela, simboloNaTabela);
 }
+/*
+Se o identificador do próximo token não existe na tabela, causa erro
+*/
 static Simbolo *verificar_declaracao(Lexico *lex, TabelaDeSimbolos *tabela)
 {
     obterProximoTokenQueNaoComentario(lex);
@@ -68,6 +81,7 @@ static Simbolo *verificar_declaracao(Lexico *lex, TabelaDeSimbolos *tabela)
     return simboloNaTabela;
 }
 
+/*Funções que representam não-terminais*/
 static void declaracoes(Lexico *lex, TabelaDeSimbolos *tabela);
 static void lista_variaveis_declaracao(Lexico *lex, TabelaDeSimbolos *tabela);
 static void comandos(Lexico *lex, TabelaDeSimbolos *tabela);

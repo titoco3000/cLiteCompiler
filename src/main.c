@@ -1,11 +1,11 @@
 /*
 Compiladores
-Trabalho 1: Analisador Léxico e Sintático
+Trabalho 2: Analisador Léxico, Sintático, Semântico e Geração de Código MEPA
 
 Henrique Lee Amorim - R.A. 10389994
 Tito Guidotti - R.A. 10388629
 
-Abril de 2024
+Maio de 2024
 */
 #include <stdio.h>
 
@@ -33,20 +33,25 @@ int analisarArquivo(char *nomeArquivo, TipoDeAnalise tipoDeAnalise)
     // se conseguiu abrir
     if (arquivo)
     {
-        if(tipoDeAnalise == ANALISE_LEXICA){
+        if (tipoDeAnalise == ANALISE_LEXICA)
+        {
             Lexico lex = criar_lex(arquivo);
-            while (lex.token.tipo != TOKEN_EOF && lex.token.tipo != TOKEN_ERRO ){
+            while (lex.token.tipo != TOKEN_EOF && lex.token.tipo != TOKEN_ERRO)
+            {
                 printToken(&lex.token);
                 consumir_token(&lex);
             }
-            if(lex.token.tipo == TOKEN_ERRO){
+            if (lex.token.tipo == TOKEN_ERRO)
+            {
                 printToken(&lex.token);
             }
-            else{
+            else
+            {
                 printf("Analise lexica concluida com sucesso\n");
             }
         }
-        else if(tipoDeAnalise == ANALISE_SINTATICA){
+        else if (tipoDeAnalise == ANALISE_SINTATICA)
+        {
             TabelaDeSimbolos tabelaDeSimbolos = CriarTabelaDeSimbolos();
             programa(arquivo, &tabelaDeSimbolos);
             LiberarTabelaDeSimbolos(tabelaDeSimbolos);
@@ -57,13 +62,23 @@ int analisarArquivo(char *nomeArquivo, TipoDeAnalise tipoDeAnalise)
     return 0;
 }
 
-void atuarEmArquivo(char *addr){
+/*
+Analisa arquivo, imprimindo info antes e depois e lidando com o caso
+de falha ao abrir
+*/
+void atuarEmArquivo(char *addr)
+{
     printf("Abrindo %s\n\n", addr);
     if (!analisarArquivo(addr, tipoDeAnaliseAtual))
         printf("Falha ao abrir o arquivo %s\n", addr);
     printf("\n");
 }
 
+/*
+Recebe lista de arquivos e/ou pastas para compilar.
+Se for pasta, entra recursivamente em cada subpasta e, se for arquivo,
+compila e imprime resultados (código MEPA e/ou erros)
+*/
 int main(int argc, char *argv[])
 {
 
@@ -75,16 +90,14 @@ int main(int argc, char *argv[])
             // se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
             if (!analisarArquivo("../exemplos/ex4.clite", tipoDeAnaliseAtual))
                 printf("Falha ao abrir o exemplo\n");
-        } 
+        }
     }
     else
-    for (int i = 1; i < argc; i++)
-    {
-        if(is_directory(argv[i]))
-            applyFunctionToAllFilesRecursive(argv[i],atuarEmArquivo);
-        else
-            atuarEmArquivo(argv[i]);
-    }
-    
-    
+        for (int i = 1; i < argc; i++)
+        {
+            if (is_directory(argv[i]))
+                applyFunctionToAllFilesRecursive(argv[i], atuarEmArquivo);
+            else
+                atuarEmArquivo(argv[i]);
+        }
 }

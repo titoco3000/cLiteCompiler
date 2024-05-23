@@ -11,8 +11,8 @@
 #define FOLDER_SEPARATOR "/"
 #endif
 
-#include <sys/types.h> // For stat().
-#include <sys/stat.h>  // For stat().
+#include <sys/types.h> // Para stat().
+#include <sys/stat.h>  // Para stat().
 
 #include <dirent.h>
 #include <stdio.h>
@@ -53,12 +53,13 @@ void applyFunctionToAllFilesRecursive(const char *path, void (*f)(char *))
     struct dirent *dp;
     DIR *dir = opendir(path);
 
-    // Unable to open directory stream
+    // Se não conseguir abrir directory stream
     if (!dir)
         return;
 
     while ((dp = readdir(dir)) != NULL)
     {
+        // Se não é "." (pasta atual) ou ".." (pasta acima)
         if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
             char buffer[512];
@@ -72,13 +73,15 @@ void applyFunctionToAllFilesRecursive(const char *path, void (*f)(char *))
                 thread_struct th;
                 th.func = f;
                 th.buffer = buffer;
+                //Cria thread separada para rodar função, para se der erro não 
+                //encerrar o programa. Passa para a função o endereço do arquivo.
                 pthread_create(&thread, NULL, thread_func, (void*)&th);
                 pthread_join(thread, NULL);
             }
         }
     }
 
-    // Close directory stream
+    // Fecha directory stream
     closedir(dir);
 }
 
