@@ -57,3 +57,4 @@ Atenção: em Windows, a compilação de pastas funciona, mas não a de subpasta
 | DSVF  | Desvia se falso
 | NADA  | Instrução vazia
 
+Disponível originalmente em https://github.com/titoco3000/cliteCompiler
