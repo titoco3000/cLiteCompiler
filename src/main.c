@@ -70,10 +70,10 @@ int main(int argc, char *argv[])
     // se não foram passados arquivos como arg, abre exemplo
     if (argc == 1)
     {
-        if (!analisarArquivo("exemplos/ex2.clite", tipoDeAnaliseAtual))
+        if (!analisarArquivo("exemplos/ex4.clite", tipoDeAnaliseAtual))
         {
             // se ainda não conseguiu, tenta procurar uma pasta para cima (util dependendo do editor)
-            if (!analisarArquivo("../exemplos/ex2.clite", tipoDeAnaliseAtual))
+            if (!analisarArquivo("../exemplos/ex4.clite", tipoDeAnaliseAtual))
                 printf("Falha ao abrir o exemplo\n");
         } 
     }

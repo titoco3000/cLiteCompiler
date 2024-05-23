@@ -75,7 +75,7 @@ int ContarSimbolos(TabelaDeSimbolos *tabela){
 }
 
 int CriarNovoLabelNaTabelaDeSimbolos(TabelaDeSimbolos* tabela){
-    return tabela->labels++;
+    return tabela->labels++ + 1;
 }
 
 void LiberarTabelaDeSimbolos(TabelaDeSimbolos tabela){

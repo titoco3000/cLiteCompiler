@@ -226,6 +226,7 @@ static void expressao(Lexico *lex, TabelaDeSimbolos *tabela)
     {
         consome_token_com_tipo(lex, TOKEN_OR);
         expressao_logica(lex, tabela);
+        printf("    DISJ\n");
         while (lex->token.tipo == TOKEN_COMENTARIO)
             consome_token_com_tipo(lex, TOKEN_COMENTARIO);
     }
@@ -239,6 +240,7 @@ static void expressao_logica(Lexico *lex, TabelaDeSimbolos *tabela)
     {
         consome_token_com_tipo(lex, TOKEN_AND);
         expressao_relacional(lex, tabela);
+        printf("    CONJ\n");
         obterProximoTokenQueNaoComentario(lex);
     }
 }
@@ -251,26 +253,33 @@ static void expressao_relacional(Lexico *lex, TabelaDeSimbolos *tabela)
     case TOKEN_COMP_MENOR:
         consome_token_com_tipo(lex, TOKEN_COMP_MENOR);
         expressao_adicao(lex, tabela);
+        printf("    CMME\n");
         break;
     case TOKEN_COMP_MENOR_OU_IGUAL:
         consome_token_com_tipo(lex, TOKEN_COMP_MENOR_OU_IGUAL);
         expressao_adicao(lex, tabela);
+        printf("    CMEG\n");
         break;
     case TOKEN_COMP_MAIOR:
         consome_token_com_tipo(lex, TOKEN_COMP_MAIOR);
         expressao_adicao(lex, tabela);
+        printf("    CMMA\n");
         break;
     case TOKEN_COMP_MAIOR_OU_IGUAL:
         consome_token_com_tipo(lex, TOKEN_COMP_MAIOR_OU_IGUAL);
         expressao_adicao(lex, tabela);
+        printf("    CMAG\n");
         break;
     case TOKEN_COMP_IGUAL:
         consome_token_com_tipo(lex, TOKEN_COMP_IGUAL);
         expressao_adicao(lex, tabela);
+        printf("    CMIG\n");
         break;
     case TOKEN_COMP_DIFERENTE:
         consome_token_com_tipo(lex, TOKEN_COMP_DIFERENTE);
         expressao_adicao(lex, tabela);
+        printf("    CMDG\n");
+
         break;
     default:
         break;
@@ -362,24 +371,27 @@ static void comando_if(Lexico *lex, TabelaDeSimbolos *tabela)
         end_else  = CriarNovoLabelNaTabelaDeSimbolos(tabela);
         printf("    DSVS L%d\n", end_else);
     }
-    printf("L%d  NADA\n",end_if);
+    printf("L%d  NADA\n",end_if );
     if (lex->token.tipo == TOKEN_ELSE)
     {
         consome_token_com_tipo(lex, TOKEN_ELSE);
         comando(lex, tabela);
-        printf("L%d  NADA\n",end_else);
+        printf("L%d  NADA\n",end_else );
     }
 }
 static void comando_while(Lexico *lex, TabelaDeSimbolos *tabela)
 {
+    int inicio_while = CriarNovoLabelNaTabelaDeSimbolos(tabela);
     int end_while = CriarNovoLabelNaTabelaDeSimbolos(tabela);
     consome_token_com_tipo(lex, TOKEN_WHILE);
     consome_token_com_tipo(lex, TOKEN_ABRE_PARENTESES);
+    printf("L%d  NADA\n",inicio_while );
     expressao(lex, tabela);
     consome_token_com_tipo(lex, TOKEN_FECHA_PARENTESES);
     printf("    DSVF L%d\n", end_while);
     comando(lex, tabela);
-    printf("L%d  NADA\n",end_while);
+    printf("    DSVS L%d\n",inicio_while );
+    printf("L%d  NADA\n",end_while );
 }
 
 static void comando_scanf(Lexico *lex, TabelaDeSimbolos *tabela)
