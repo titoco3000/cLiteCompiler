@@ -1,0 +1,27 @@
+/*
+programa calcula e imprime enésimo numero de fibonnaci
+*/
+int main(void)
+{
+    int _n1, _n2,_temp;
+    int _limite;
+    int _contador;
+    _n1 = 0x1;
+    _n2 = _n1;
+    _contador = //inicia contador como 0 /*
+    0x0;
+    scanf(_limite);
+    if( _limite <= 0x2 )
+        printf(_n1);
+    else{
+        while (_contador < _limite)
+        {          
+            _temp = _n2;  
+            _n2 = _n1 * _n2;
+            _n1 = _temp;  
+            _contador = _contador + 0x1;
+            if(_contador == _limite)
+                printf(_n2);
+        }
+    }
+}
